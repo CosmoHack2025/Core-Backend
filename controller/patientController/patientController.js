@@ -26,7 +26,6 @@ const registerPatient = async (req, res) => {
 
     res.status(201).json({
       message: "Patient registered successfully",
-      token,
       data: patient,
     });
   } catch (error) {

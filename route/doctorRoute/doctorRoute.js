@@ -6,11 +6,12 @@ const {
   getDoctorProfile,
   updateDoctorProfile,
 } = require("../../controller/doctorController/doctorController");
+const checkForAuthenticationCookie = require("../../middleware/authMiddleware");
 
 
 router.post("/register", registerDoctor);
 router.post("/login", loginDoctor);
-router.get("/profile",  getDoctorProfile);
-router.put("/profile", updateDoctorProfile);
+router.get("/profile",checkForAuthenticationCookie('token') ,  getDoctorProfile);
+router.put("/profile",checkForAuthenticationCookie('token') , updateDoctorProfile);
 
 module.exports = router;

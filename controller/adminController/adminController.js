@@ -27,7 +27,6 @@ const registerAdmin = async (req, res) => {
 
     res.status(201).json({
       message: "Admin registered successfully",
-      token,
     data: admin
     });
   } catch (error) {

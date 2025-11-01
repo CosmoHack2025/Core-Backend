@@ -1,4 +1,4 @@
-const { validateToken } = require("../services/authService");
+const { validateToken } = require("../authServices/authService");
 const { parse } = require("cookie");
 
 
@@ -35,6 +35,6 @@ function checkForAuthenticationCookie() {
   };
 }
 
-const authMiddleware = checkForAuthenticationCookie();
 
-module.exports = { authMiddleware };
+
+module.exports = checkForAuthenticationCookie;

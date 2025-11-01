@@ -103,3 +103,13 @@ Assessment.belongsTo(Patient, {
   foreignKey: "patientId",
   as: "patient",
 });
+
+module.exports = {
+  Patient,
+  Doctor,
+  Admin,
+  Report,
+  Analytics,
+  Recommendation,
+  Assessment,
+};

@@ -47,12 +47,7 @@ const registerDoctor = async (req, res) => {
 
     res.status(201).json({
       message: "Doctor registered successfully. Waiting for admin approval.",
-      doctor: {
-        id: doctor.id,
-        email: doctor.email,
-        fullName: doctor.fullName,
-        isApproved: doctor.isApproved,
-      },
+      data: doctor,
     });
   } catch (error) {
     console.error("Doctor registration error:", error);
