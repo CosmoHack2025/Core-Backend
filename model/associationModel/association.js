@@ -5,6 +5,29 @@ const Report = require("../reportModel/report");
 const Analytics = require("../analyticsModel/analytics");
 const Recommendation = require("../recommendationModel/recommendation");
 const Assessment = require("../assesmentModel/assessment");
+const Booking = require("../scheduleBooking/booking");
+
+// Patient - Booking (One-to-Many)
+Patient.hasMany(Booking, {
+  foreignKey: "patientId",
+  as: "bookings",
+  onDelete: "CASCADE",
+});
+Booking.belongsTo(Patient, {
+  foreignKey: "patientId",
+  as: "patient",
+});
+
+// Doctor - Booking (One-to-Many)
+Doctor.hasMany(Booking, {
+  foreignKey: "doctorId",
+  as: "bookings",
+  onDelete: "CASCADE",
+});
+Booking.belongsTo(Doctor, {
+  foreignKey: "doctorId",
+  as: "doctor",
+});
 
 // Admin - Doctor (Doctor approval by Admin)
 Admin.hasMany(Doctor, {
@@ -112,4 +135,5 @@ module.exports = {
   Analytics,
   Recommendation,
   Assessment,
+  Booking,
 };

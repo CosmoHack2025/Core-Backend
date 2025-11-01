@@ -6,6 +6,7 @@ const {
   Analytics,
   Recommendation,
   Assessment,
+  Booking,
 } = require("./associationModel/association");
 
 module.exports = {
@@ -16,4 +17,5 @@ module.exports = {
   Analytics,
   Recommendation,
   Assessment,
+  Booking,
 };
