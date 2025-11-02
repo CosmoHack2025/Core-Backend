@@ -7,6 +7,7 @@ const {
   Recommendation,
   Assessment,
   Booking,
+  Contact,
 } = require("./associationModel/association");
 
 module.exports = {
@@ -18,4 +19,5 @@ module.exports = {
   Recommendation,
   Assessment,
   Booking,
+  Contact,
 };

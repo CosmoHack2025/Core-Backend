@@ -6,11 +6,7 @@ const {
   callPredictionAPI,
 } = require("../../aiServices/predictionService");
 
-/**
- * Calculate severity level based on AI confidence score
- * @param {number} confidence - Confidence score (0-1)
- * @returns {string} - Severity level: "low", "moderate", "high", "critical"
- */
+
 const calculateSeverity = (confidence) => {
   const confidencePercentage = confidence * 100;
   
@@ -386,7 +382,7 @@ const analyzeReportWithAI = async (req, res) => {
     // Calculate severity based on confidence score
     const confidence = predictionResult.prediction.confidence;
     const severity = calculateSeverity(confidence);
-    console.log(`   📊 Confidence: ${(confidence * 100).toFixed(2)}% → Severity: ${severity.toUpperCase()}`);
+    console.log(`    Confidence: ${(confidence * 100).toFixed(2)}% → Severity: ${severity.toUpperCase()}`);
     
     const analyticsData = {
       reportId: report.id,

@@ -6,6 +6,7 @@ const Analytics = require("../analyticsModel/analytics");
 const Recommendation = require("../recommendationModel/recommendation");
 const Assessment = require("../assesmentModel/assessment");
 const Booking = require("../scheduleBooking/booking");
+const Contact = require("../contactModel/contact");
 
 // Patient - Booking (One-to-Many)
 Patient.hasMany(Booking, {
@@ -127,6 +128,17 @@ Assessment.belongsTo(Patient, {
   as: "patient",
 });
 
+// Admin - Contact (Contact reply by Admin)
+Admin.hasMany(Contact, {
+  foreignKey: "repliedBy",
+  as: "contactReplies",
+  onDelete: "SET NULL",
+});
+Contact.belongsTo(Admin, {
+  foreignKey: "repliedBy",
+  as: "admin",
+});
+
 module.exports = {
   Patient,
   Doctor,
@@ -136,4 +148,5 @@ module.exports = {
   Recommendation,
   Assessment,
   Booking,
+  Contact,
 };

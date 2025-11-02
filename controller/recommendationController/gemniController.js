@@ -312,6 +312,63 @@ Please provide practical, evidence-based advice that a patient can easily unders
   }
 };
 
+
+const getRecommendationByAnalytics = async (req, res) => {
+  try {
+    console.log('\n========== GET RECOMMENDATION STARTED ==========');
+    const { analyticsId } = req.params;
+   
+    console.log(`🔍 [STEP 1] Fetching recommendation for analytics ID: ${analyticsId}`);
+
+    // Fetch recommendation with analytics and patient details
+    const recommendation = await Recommendation.findOne({
+      where: { analyticsId: analyticsId },
+      include: [
+        {
+          model: Analytics,
+          as: "analytics",
+          attributes: ["id", "diagnosis", "severity", "status"],
+        },
+        {
+          model: Patient,
+          as: "patient",
+          attributes: ["id", "fullName", "email"],
+        },
+      ],
+    });
+
+    if (!recommendation) {
+      console.log("❌ No recommendation found for this analytics");
+      return res.status(404).json({
+        success: false,
+        message: "No recommendation found for this analytics. Please generate recommendations first.",
+      });
+    }
+
+    console.log(`✅ Recommendation found: ${recommendation.id}`);
+
+ 
+
+    console.log('✨ [STEP 2] Sending recommendation data...');
+    console.log('========== GET RECOMMENDATION ENDED (SUCCESS) ==========\n');
+
+    return res.status(200).json({
+      success: true,
+      message: "Recommendation retrieved successfully",
+     data : recommendation,
+    });
+  } catch (error) {
+    console.error("❌ [ERROR] getRecommendationByAnalytics failed:", error.message);
+    console.log('========== GET RECOMMENDATION ENDED (ERROR) ==========\n');
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve recommendation",
+      error: error?.message ?? String(error),
+    });
+  }
+};
+
 module.exports = {
   generateHealthRecommendations,
+  getRecommendationByAnalytics,
 };
