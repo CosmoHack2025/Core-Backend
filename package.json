@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.922.0",
+    "@aws-sdk/client-textract": "^3.922.0",
     "@aws-sdk/lib-storage": "^3.922.0",
     "@supabase/supabase-js": "^2.78.0",
     "aws-sdk": "^2.1692.0",

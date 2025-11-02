@@ -5,11 +5,15 @@ const {
   getDoctorBookings,
   getDoctorBookingById,
   respondToBooking,
+  getPatientBookings,
+  getPatientBookingById,
 } = require("../../controller/bookingController/bookingController");
 const checkForAuthenticationCookie = require("../../middleware/authMiddleware");
 
 // Patient routes
 router.post("/create", checkForAuthenticationCookie("token"), createBooking);
+router.get("/patient/all", checkForAuthenticationCookie("token"), getPatientBookings);
+router.get("/patient/:bookingId", checkForAuthenticationCookie("token"), getPatientBookingById);
 
 
 // Doctor routes

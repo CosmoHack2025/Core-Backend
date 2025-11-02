@@ -34,12 +34,14 @@ const patientRoute = require("./route/patientRoute/patientRoute");
 const doctorRoute = require("./route/doctorRoute/doctorRoute");
 const adminRoute = require("./route/adminRoute/adminRoute");
 const bookingRoute = require("./route/bookingRoute/bookingRoute");
+const reportRoute = require("./route/reportRoute/reportRoute");
 
 // Use routes
 app.use("/api/patient", patientRoute);
 app.use("/api/doctor", doctorRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/booking", bookingRoute);
+app.use("/api/report", reportRoute);
 
 // Health check
 app.get("/", (req, res) => {

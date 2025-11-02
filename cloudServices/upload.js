@@ -19,7 +19,17 @@ const upload = multer({
       const filename = Date.now().toString() + "-" + file.originalname;
       cb(null, filename);
     }
-  })
+  }),
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB in bytes
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed"), false);
+    }
+  }
 });
 
 module.exports = upload;
