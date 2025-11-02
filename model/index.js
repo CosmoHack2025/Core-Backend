@@ -8,6 +8,8 @@ const {
   Assessment,
   Booking,
   Contact,
+  ChatSession,
+  ChatMessage,
 } = require("./associationModel/association");
 
 module.exports = {
@@ -20,4 +22,6 @@ module.exports = {
   Assessment,
   Booking,
   Contact,
+  ChatSession,
+  ChatMessage,
 };

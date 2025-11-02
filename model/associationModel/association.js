@@ -7,6 +7,8 @@ const Recommendation = require("../recommendationModel/recommendation");
 const Assessment = require("../assesmentModel/assessment");
 const Booking = require("../scheduleBooking/booking");
 const Contact = require("../contactModel/contact");
+const ChatSession = require("../chatModel/chatSession");
+const ChatMessage = require("../chatModel/chatMessage");
 
 // Patient - Booking (One-to-Many)
 Patient.hasMany(Booking, {
@@ -139,6 +141,41 @@ Contact.belongsTo(Admin, {
   as: "admin",
 });
 
+// Patient - ChatSession (One-to-Many)
+Patient.hasMany(ChatSession, {
+  foreignKey: "patientId",
+  as: "chatSessions",
+  onDelete: "CASCADE",
+});
+ChatSession.belongsTo(Patient, {
+  foreignKey: "patientId",
+  as: "patient",
+});
+
+// ChatSession - ChatMessage (One-to-Many)
+ChatSession.hasMany(ChatMessage, {
+  foreignKey: "sessionId",
+  sourceKey: "sessionId",
+  as: "messages",
+  onDelete: "CASCADE",
+});
+ChatMessage.belongsTo(ChatSession, {
+  foreignKey: "sessionId",
+  targetKey: "sessionId",
+  as: "session",
+});
+
+// Patient - ChatMessage (One-to-Many)
+Patient.hasMany(ChatMessage, {
+  foreignKey: "patientId",
+  as: "chatMessages",
+  onDelete: "CASCADE",
+});
+ChatMessage.belongsTo(Patient, {
+  foreignKey: "patientId",
+  as: "patient",
+});
+
 module.exports = {
   Patient,
   Doctor,
@@ -149,4 +186,6 @@ module.exports = {
   Assessment,
   Booking,
   Contact,
+  ChatSession,
+  ChatMessage,
 };

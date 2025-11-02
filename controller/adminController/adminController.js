@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { Op } = require("sequelize");
 const { Admin, Doctor } = require("../../model");
 const { createToken } = require("../../authServices/authService");
 const setTokenCookie = require("../../authServices/setTokenCookie");
@@ -187,19 +188,45 @@ const rejectDoctor = async (req, res) => {
 
 const getAllDoctors = async (req, res) => {
   try {
+    console.log("\n🔍 Searching doctors...");
+    
+    const { query } = req.query;
+    
+    // Build where clause
+    const whereClause = { 
+      isApproved: true, 
+      isActive: true 
+    };
+
+    // If query parameter is provided, search in fullName and specialization
+    if (query && query.trim() !== "") {
+      console.log(`   � Query search: "${query}"`);
+      const searchTerm = query.trim();
+      
+      whereClause[Op.or] = [
+        { fullName: { [Op.iLike]: `%${searchTerm}%` } },
+        { specialization: { [Op.iLike]: `%${searchTerm}%` } }
+      ];
+    }
+
+    console.log("   🔎 Executing search query...");
+
     const doctors = await Doctor.findAll({
-      where: { isApproved: true, isActive: true },
+      where: whereClause,
       attributes: { exclude: ["password"] },
       order: [["createdAt", "DESC"]],
     });
 
+    console.log(`✅ Found ${doctors.length} doctor(s)`);
+
     res.status(200).json({
       message: "Doctors retrieved successfully",
       count: doctors.length,
+      searchQuery: query || null,
       doctors,
     });
   } catch (error) {
-    console.error("Get all doctors error:", error);
+    console.error("❌ Get all doctors error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

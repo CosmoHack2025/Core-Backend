@@ -95,7 +95,7 @@ async function generateWithVertexAI(prompt) {
 
       const response = await axios.post(endpoint, requestBody, {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json',  
           'Authorization': `Bearer ${accessToken}`
         },
         timeout: 1200000

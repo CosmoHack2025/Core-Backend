@@ -37,6 +37,8 @@ const bookingRoute = require("./route/bookingRoute/bookingRoute");
 const reportRoute = require("./route/reportRoute/reportRoute");
 const recommendationRoute = require("./route/recommendationRoute/gemniRoute");
 const contactRoute = require("./route/contactRoute/contactRoute");
+const chatRoute = require("./route/chatRoute/chatRoute");
+const hospitalRoute = require("./route/hospitalRoute/hospitalRoute");
 
 // Use routes
 app.use("/api/patient", patientRoute);
@@ -46,6 +48,8 @@ app.use("/api/booking", bookingRoute);
 app.use("/api/report", reportRoute);
 app.use("/api/recommendation",recommendationRoute );
 app.use("/api/contact", contactRoute);
+app.use("/api/chat", chatRoute);
+app.use("/api/hospital", hospitalRoute);
 
 // Health check
 app.get("/", (req, res) => {
