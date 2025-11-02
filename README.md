@@ -48,13 +48,13 @@ A comprehensive healthcare management system backend built for hackathon, featur
 - Sequelize ORM v6.37.7
 
 **AI & Machine Learning**
+- Self Built Model
 - Google Vertex AI (Gemini 2.0-flash-exp, 1.5-flash, 1.5-pro)
 - Google Maps API
 
 **Cloud Services**
 - AWS S3 (File Storage)
 - AWS Textract (PDF Text Extraction)
-- AWS Rekognition (Image Analysis)
 - Supabase (Alternative Storage)
 
 **Authentication & Security**
