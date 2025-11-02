@@ -1,7 +1,10 @@
 const express = require("express");
-const { improveText } = require("../../controller/aiController/gemni");
+const { generateHealthRecommendations } = require("../../controller/recommendationController/gemniController");
+
 const router = express.Router();
 
-router.post("/improve-text", improveText);
+
+router.post("/health-recommendations", generateHealthRecommendations);
+
 
 module.exports = router;

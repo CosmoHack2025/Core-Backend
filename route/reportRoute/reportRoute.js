@@ -1,19 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../../cloudServices/upload");
 const {
   uploadReport,
   getPatientReports,
   getReportById,
   deleteReport,
+  analyzeReportWithAI,
+  getReportAnalytics,
 } = require("../../controller/reportController/reportController");
 const  checkForAuthenticationCookie  = require("../../middleware/authMiddleware");
+const upload = require("../../cloudServices/upload");
 
 router.post(
   "/upload",
   checkForAuthenticationCookie('token'),
- 
-  upload.single("reportFile"), 
+  upload.single("file"), 
   uploadReport
 );
 
@@ -39,6 +40,21 @@ router.delete(
   checkForAuthenticationCookie('token'),
  
   deleteReport
+);
+
+
+
+router.post(
+  "/:reportId/analyze",
+  checkForAuthenticationCookie('token'),
+  analyzeReportWithAI
+);
+
+
+router.get(
+  "/:reportId/analytics",
+  checkForAuthenticationCookie('token'),
+  getReportAnalytics
 );
 
 module.exports = router;

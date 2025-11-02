@@ -17,6 +17,11 @@ const textractClient = new TextractClient({
  */
 const extractTextFromPDF = async (bucketName, fileName) => {
   try {
+    console.log("\n   🔧 [Textract Service] Starting text extraction...");
+    console.log(`   🔧 [Textract Service] AWS Region: ${process.env.AWS_REGION_S3}`);
+    console.log(`   🔧 [Textract Service] Bucket: ${bucketName}`);
+    console.log(`   🔧 [Textract Service] File: ${fileName}`);
+    
     const params = {
       Document: {
         S3Object: {
@@ -26,24 +31,44 @@ const extractTextFromPDF = async (bucketName, fileName) => {
       },
     };
 
+    console.log("   🔧 [Textract Service] Sending DetectDocumentText command to AWS...");
     const command = new DetectDocumentTextCommand(params);
     const response = await textractClient.send(command);
+    console.log("   🔧 [Textract Service] ✅ Received response from AWS Textract");
 
     // Extract all text from blocks
+    console.log("   🔧 [Textract Service] Processing blocks...");
     let extractedText = "";
     const lines = [];
     const words = [];
 
     if (response.Blocks) {
+      console.log(`   🔧 [Textract Service] Total blocks received: ${response.Blocks.length}`);
+      
+      let lineCount = 0;
+      let wordCount = 0;
+      let pageCount = 0;
+      
       response.Blocks.forEach((block) => {
         if (block.BlockType === "LINE") {
           lines.push(block.Text);
           extractedText += block.Text + "\n";
+          lineCount++;
         } else if (block.BlockType === "WORD") {
           words.push(block.Text);
+          wordCount++;
+        } else if (block.BlockType === "PAGE") {
+          pageCount++;
         }
       });
+      
+      console.log(`   🔧 [Textract Service] Processed: ${pageCount} pages, ${lineCount} lines, ${wordCount} words`);
+    } else {
+      console.log("   🔧 [Textract Service] ⚠️ No blocks found in response");
     }
+
+    console.log(`   🔧 [Textract Service] Document metadata:`, response.DocumentMetadata);
+    console.log("   🔧 [Textract Service] ✅ Text extraction completed successfully");
 
     return {
       success: true,
@@ -54,7 +79,11 @@ const extractTextFromPDF = async (bucketName, fileName) => {
       blockCount: response.Blocks ? response.Blocks.length : 0,
     };
   } catch (error) {
-    console.error("Error extracting text from PDF:", error);
+    console.log("   🔧 [Textract Service] ❌ ERROR during text extraction");
+    console.error("   🔧 [Textract Service] Error type:", error.name);
+    console.error("   🔧 [Textract Service] Error message:", error.message);
+    console.error("   🔧 [Textract Service] Error code:", error.code || error.$metadata?.httpStatusCode);
+    console.error("   🔧 [Textract Service] Full error:", error);
     throw new Error(`Textract extraction failed: ${error.message}`);
   }
 };

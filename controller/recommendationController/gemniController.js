@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { GoogleAuth } = require('google-auth-library');
+const { Analytics, Recommendation, Patient } = require("../../model");
 
 
 
@@ -25,16 +26,6 @@ try {
 } catch (err) {
   console.error(" Failed to initialize Google Auth:", err.message);
 }
-
-const prewrittenDescription = `You are a professional writing assistant. Your task is to improve the following text by:
-1. Correcting all grammar mistakes
-2. Fixing any spelling errors
-3. Making the language more professional and formal
-4. Improving clarity and sentence structure
-5. Breaking content into meaningful, well-structured sentences
-6. Maintaining the original meaning and intent
-
-Please provide ONLY the improved text without any explanations, introductions, or additional comments.`;
 
 
 
@@ -129,124 +120,198 @@ async function generateWithVertexAI(prompt) {
   throw lastError || new Error('All Vertex AI models failed');
 }
 
-const improveText = async (req, res) => {
-  console.log('\n✨ [STEP 1] Starting Text Improvement');
-  
+
+const generateHealthRecommendations = async (req, res) => {
   try {
-    // Validate configuration
-    console.log('🔍 [STEP 2] Validating configuration...');
-    
-    if (!PROJECT_ID) {
-      console.error('❌ Validation failed: PROJECT_ID missing');
-      return res.status(500).json({
-        success: false,
-        message: "Server configuration error: VERTEX_PROJECT_ID missing.",
-      });
-    }
+    console.log('\n========== HEALTH RECOMMENDATION GENERATION STARTED ==========');
+    console.log('📋 [STEP 1] Fetching analytics data...');
 
+    // Validate auth
     if (!auth) {
-      console.error('❌ Validation failed: Google Auth not initialized');
+      console.error('❌ Google Auth not initialized');
       return res.status(500).json({
         success: false,
-        message: "Server configuration error: Google Auth not initialized. Please set GOOGLE_APPLICATION_CREDENTIALS.",
+        message: "Server configuration error: Google Auth not initialized.",
       });
     }
-    
-    console.log('✅ Configuration validated');
 
-    // Validate request
-    console.log('🔍 [STEP 3] Validating user input...');
-    const userDescription = req.body?.description ?? req.body?.text ?? null;
-    
-    if (!userDescription || typeof userDescription !== "string" || userDescription.trim() === "") {
-      console.error('❌ Validation failed: Description missing or invalid');
-      return res.status(400).json({ 
-        success: false, 
-        message: "Description required in request body." 
+    // Get analyticsId from request body
+    const { analyticsId } = req.body;
+
+    if (!analyticsId) {
+      console.error('❌ Validation failed: analyticsId missing');
+      return res.status(400).json({
+        success: false,
+        message: "analyticsId is required in request body.",
       });
     }
+
+    console.log(`🔍 Fetching analytics with ID: ${analyticsId}`);
+
+    // Fetch analytics from database
+    const analytics = await Analytics.findByPk(analyticsId, {
+      include: [
+        {
+          model: Patient,
+          as: "patient",
+          attributes: ["id", "fullName", "email"],
+        },
+      ],
+    });
+
+    if (!analytics) {
+      console.error('❌ Analytics not found');
+      return res.status(404).json({
+        success: false,
+        message: "Analytics not found with the provided ID.",
+      });
+    }
+
+    // Check if diagnosis exists
+    if (!analytics.diagnosis || !analytics.diagnosis.prediction) {
+      console.error('❌ No diagnosis found in analytics');
+      return res.status(400).json({
+        success: false,
+        message: "No diagnosis found in analytics. Please analyze the report first.",
+      });
+    }
+
+    const { prediction, confidence } = analytics.diagnosis;
+    console.log(`✅ Diagnosis fetched: ${prediction} (Confidence: ${confidence || 'N/A'})`);
+
+    // Build health recommendation prompt
+    console.log('📝 [STEP 2] Building health recommendation prompt...');
     
-    console.log(`✅ User description received: "${userDescription.substring(0, 50)}..."`);
+    const healthRecommendationPrompt = `You are a professional healthcare advisor AI. Based on the following diagnosis, provide comprehensive, actionable, and patient-friendly health recommendations.
 
-    // Build prompt
-    console.log('📝 [STEP 4] Building AI prompt...');
-    const prompt = `${prewrittenDescription}
+**Diagnosis:** ${prediction}
+**Confidence Level:** ${confidence ? (confidence * 100).toFixed(2) + '%' : 'Not specified'}
 
-Text to improve:
-"${userDescription}"
+Please provide recommendations in the following structured format:
 
-Improved text:`;
-    
+## Overview
+[Brief explanation of the condition in simple terms]
+
+## Lifestyle Recommendations
+- [List specific lifestyle changes]
+- [Include diet, exercise, sleep habits]
+- [Daily routine adjustments]
+
+## Dietary Guidelines
+- [Foods to include]
+- [Foods to avoid]
+- [Meal timing and portion suggestions]
+
+## Medical Care
+- [When to consult a doctor]
+- [Regular check-ups needed]
+- [Medications or treatments to discuss with healthcare provider]
+
+## Warning Signs
+- [Symptoms that require immediate medical attention]
+- [When to go to emergency room]
+
+## Self-Monitoring
+- [What to track daily/weekly]
+- [Tools or apps that can help]
+- [Target ranges for measurements]
+
+## Additional Resources
+- [Support groups or communities]
+- [Reliable information sources]
+
+Please provide practical, evidence-based advice that a patient can easily understand and implement. Be empathetic, clear, and encouraging in your tone.`;
+
     console.log('✅ Prompt built successfully');
 
-    // Generate content using Vertex AI
-    console.log('🤖 [STEP 5] Calling Vertex AI to improve text...');
+    // Generate recommendations using Vertex AI
+    console.log('🤖 [STEP 3] Calling Vertex AI to generate recommendations...');
     let aiResp = null;
     try {
-      aiResp = await generateWithVertexAI(prompt);
+      aiResp = await generateWithVertexAI(healthRecommendationPrompt);
       console.log('✅ AI response received');
     } catch (err) {
       console.error("❌ Vertex AI generation failed:", err.message);
       return res.status(500).json({
         success: false,
-        message: "Failed to improve text with Vertex AI. Check server logs.",
+        message: "Failed to generate recommendations with AI.",
         error: err?.message || String(err),
       });
     }
 
-    // Extract text from response
-    console.log('📄 [STEP 6] Extracting text from AI response...');
-    const improvedText = extractAiText(aiResp);
-    
-    if (!improvedText) {
-      console.error('❌ No text content found in AI response');
+    // Extract recommendations from response
+    console.log('📄 [STEP 4] Extracting recommendations from AI response...');
+    const recommendations = extractAiText(aiResp);
+
+    if (!recommendations) {
+      console.error('❌ No recommendations found in AI response');
       return res.status(500).json({
         success: false,
-        message: "No text content in AI response",
+        message: "No recommendations content in AI response",
         response: aiResp,
       });
     }
-    
-    console.log(`✅ Text extracted (${improvedText.length} characters)`);
 
-    // Clean up the improved text
-    console.log('🧹 [STEP 7] Cleaning up improved text...');
-    const cleanedText = improvedText
-      .replace(/^["']|["']$/g, '') // Remove leading/trailing quotes
-      .replace(/^\*\*|^\*|\*\*$|\*$/g, '') // Remove markdown bold/italic
-      .replace(/^Improved text:\s*/i, '') // Remove "Improved text:" prefix if present
-      .trim();
-    
-    console.log('✅ Text cleaned');
- 
-    console.log('✨ [STEP 8] Sending response to client...');
-    
-    // Send response with improved text
-    const response = {
-      success: true,
-      message: 'Text improved successfully',
-      data: {
-        original: userDescription,
-        improved: cleanedText,
-        characterCount: {
-          original: userDescription.length,
-          improved: cleanedText.length
-        }
-      }
+    console.log(`✅ Recommendations extracted (${recommendations.length} characters)`);
+
+    console.log('💾 [STEP 5] Saving recommendations to database...');
+
+    // Check if recommendation already exists for this analytics
+    let recommendation = await Recommendation.findOne({
+      where: { analyticsId: analytics.id },
+    });
+
+    const recommendationData = {
+      analyticsId: analytics.id,
+      patientId: analytics.patientId,
+      reportId: analytics.reportId,
+      recommendations: recommendations, // Save the AI-generated text
+      status: "generated",
     };
 
-    return res.status(200).json(response);
+    if (recommendation) {
+      // Update existing recommendation
+      await recommendation.update(recommendationData);
+      console.log(`✅ Recommendation updated with ID: ${recommendation.id}`);
+    } else {
+      // Create new recommendation
+      recommendation = await Recommendation.create(recommendationData);
+      console.log(`✅ Recommendation created with ID: ${recommendation.id}`);
+    }
+
+    console.log('✨ [STEP 6] Sending response to client...');
+    console.log('========== HEALTH RECOMMENDATION GENERATION ENDED (SUCCESS) ==========\n');
+
+    // Send response with recommendations
+    return res.status(200).json({
+      success: true,
+      message: 'Health recommendations generated and saved successfully',
+      data: {
+        recommendationId: recommendation.id,
+        analyticsId: analytics.id,
+        patientId: analytics.patientId,
+        patientName: analytics.patient.fullName,
+        diagnosis: {
+          prediction: prediction,
+          confidence: confidence,
+        },
+        recommendations: recommendations,
+        createdAt: recommendation.createdAt,
+        updatedAt: recommendation.updatedAt,
+      }
+    });
 
   } catch (error) {
-    console.error("❌ [ERROR] improveText failed:", error.message);
-    return res.status(500).json({ 
-      success: false, 
-      message: "Internal Server Error", 
-      error: error?.message ?? String(error) 
+    console.error("❌ [ERROR] generateHealthRecommendations failed:", error.message);
+    console.log('========== HEALTH RECOMMENDATION GENERATION ENDED (ERROR) ==========\n');
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error?.message ?? String(error)
     });
   }
 };
 
 module.exports = {
-  improveText,
+  generateHealthRecommendations,
 };

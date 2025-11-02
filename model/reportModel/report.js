@@ -31,6 +31,26 @@ const Report = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    extractedText: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    extractedLines: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+    },
+    wordCount: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    blockCount: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    documentMetadata: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+    },
   },
   {
     tableName: "reports",
