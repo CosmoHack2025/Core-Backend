@@ -1,4 +1,4 @@
-# Healthcare Management System - Backend API
+# Healthcare Management System - Backend API (Hackethon)
 
 A comprehensive healthcare management system backend built for hackathon, featuring AI-powered medical report analysis, hospital search, doctor management, and intelligent chatbot assistance using Google Gemini AI.
 
