@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 9191;
 const app = express();
 
 const allowedOrigins = [process.env.FRONTEND_URL];
-
+//final testing url
 app.use(
   cors({
     origin: function (origin, callback) {
