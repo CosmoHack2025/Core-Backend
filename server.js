@@ -7,7 +7,7 @@ const initDB = require("./dbConnection/dbSync");
 const PORT = process.env.PORT || 9191;
 const app = express();
 
-const allowedOrigins = [process.env.FRONTEND_URL];
+const allowedOrigins = [process.env.FRONTEND_URL,process.env.FRONTEND_URL_ADMIN];
 //final testing url
 app.use(
   cors({
