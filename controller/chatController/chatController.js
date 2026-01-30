@@ -46,10 +46,16 @@ async function callGeminiAPI(conversationHistory) {
         systemInstruction: {
           parts: [
             {
-              text: "You are a helpful healthcare assistant. Provide clear, accurate, and empathetic responses to health-related questions. Keep responses concise and easy to understand. If a question is outside your medical knowledge, suggest consulting a healthcare professional."
+              text: "You are a helpful healthcare assistant. Be clear, accurate, and empathetic. IMPORTANT: Respond in 2 to 4 short lines (not a big paragraph). Keep each line concise. Avoid long explanations. If more context is needed, ask ONE brief follow-up question. If outside your scope, advise consulting a healthcare professional."
             }
           ]
-        }
+        },
+        generationConfig: {
+          // Keep answers short (roughly a few lines)
+          maxOutputTokens: 256,
+          temperature: 0.4,
+          topP: 0.9,
+        },
       };
 
       const response = await axios.post(endpoint, requestBody, {
@@ -73,6 +79,80 @@ async function callGeminiAPI(conversationHistory) {
   }
 
   throw lastError || new Error("All Gemini models failed");
+}
+
+function formatConciseLines(text, { minLines = 2, maxLines = 5, maxCharsPerLine = 120 } = {}) {
+  if (!text) return "";
+
+  const normalized = String(text)
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  if (!normalized) return "";
+
+  const wrapLine = (line) => {
+    const words = String(line).trim().split(/\s+/).filter(Boolean);
+    const out = [];
+    let current = "";
+    for (const word of words) {
+      const next = current ? `${current} ${word}` : word;
+      if (next.length <= maxCharsPerLine) {
+        current = next;
+      } else {
+        if (current) out.push(current);
+        current = word;
+      }
+    }
+    if (current) out.push(current);
+    return out;
+  };
+
+  // 1) Start from existing newlines
+  let lines = normalized
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  // 2) If it's a single line / paragraph, split by sentences
+  if (lines.length <= 1) {
+    const sentences = normalized
+      .replace(/\s+/g, " ")
+      .split(/(?<=[.!?])\s+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    lines = sentences.length ? sentences : [normalized];
+  }
+
+  // 3) Wrap long lines
+  lines = lines.flatMap((l) => wrapLine(l));
+
+  // 4) Enforce max lines
+  if (lines.length > maxLines) {
+    lines = lines.slice(0, maxLines);
+  }
+
+  // 5) Enforce min lines
+  if (lines.length < minLines) {
+    const single = lines[0] || normalized;
+    const wrapped = wrapLine(single);
+    lines = wrapped.length >= minLines ? wrapped.slice(0, minLines) : [single, "Can you share a bit more detail?"]; 
+  }
+
+  // Final safety trim
+  lines = lines
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(0, maxLines);
+
+  while (lines.length < minLines) {
+    lines.push("Can you share a bit more detail?");
+  }
+
+  return lines.join("\n");
 }
 
 
@@ -146,6 +226,12 @@ const chat = async (req, res) => {
     try {
       const aiResponse = await callGeminiAPI(geminiHistory);
 
+      const formattedResponse = formatConciseLines(aiResponse, {
+        minLines: 2,
+        maxLines: 5,
+        maxCharsPerLine: 120,
+      });
+
       console.log("✅ Gemini response received");
 
       return res.status(200).json({
@@ -154,7 +240,7 @@ const chat = async (req, res) => {
         data: {
           sessionId: sessionId,
           userMessage: message,
-          botResponse: aiResponse,
+          botResponse: formattedResponse,
           timestamp: new Date().toISOString(),
         },
       });

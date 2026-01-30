@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const AI_MODEL_API = "https://ai.api.hacksprint.pixbit.me/predict";
+const AI_MODEL_API = process.env.AI_MODEL_API || "http://localhost:8000/predict";
 
 /**
  * Extract numerical features from extracted text
