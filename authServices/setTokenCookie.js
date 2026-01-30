@@ -2,10 +2,10 @@ const { serialize } = require("cookie");
 const setTokenCookie = (res, token) => {
   res.setHeader("Set-Cookie", [
     serialize("token", token, {
-    // domain:".pixbit.me",
+    domain:".satishdev.in",
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
     })
